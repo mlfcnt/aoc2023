@@ -1,4 +1,4 @@
-import { fileInputToLines } from "../lib/readInput";
+import { fileInputToLines } from "../lib/fileInputToLines";
 
 const main = async () => {
   const lines = await fileInputToLines("input.txt");
@@ -7,33 +7,41 @@ const main = async () => {
     acc += getLineCalibrationValue(line);
     return acc;
   }, 0);
-  console.log(result);
+  console.log(`Day 1, second puzzle result : ${result}`);
   return null;
 };
 
-const getLineCalibrationValue = (line: string) => {
-  const numbers = line.match(spelledOutNumbersRegex);
-  if (!numbers) {
-    throw new Error("No numbers found in line");
+export const getLineCalibrationValue = (line: string) => {
+  const results: number[] = [];
+
+  for (let index = 0; index < line.length; index++) {
+    const letter = line[index];
+    if (letter.match(/[0-9]/)) {
+      results.push(Number(letter));
+    } else {
+      const numbersThatStartWithLetter = getNumbersWithFirstLetter(letter);
+      if (!numbersThatStartWithLetter.length) {
+        continue;
+      } else {
+        for (const numberToMatch of numbersThatStartWithLetter) {
+          const slicedString = line.slice(index, index + numberToMatch.length);
+
+          if (slicedString === numberToMatch) {
+            results.push(Number(spelledOutNumbers[slicedString]));
+          } else {
+            continue;
+          }
+        }
+      }
+    }
   }
-  const firstNumber = isNaN(+numbers[0])
-    ? spelledOutNumbers[numbers[0]]
-    : +numbers[0];
-
-  // Use numbers.slice(-1)[0] instead of numbers[numbers.length - 1]
-  const lastNumber = isNaN(+numbers.slice(-1)[0])
-    ? spelledOutNumbers[numbers.slice(-1)[0]]
-    : numbers.slice(-1)[0];
-
-  console.log(
-    line,
-    firstNumber,
-    lastNumber,
-    `${firstNumber}${lastNumber}`,
-    numbers
-  );
-
-  return Number(`${firstNumber}${lastNumber}`);
+  const firstNumber = results[0];
+  const lastNumber = results[results.length - 1];
+  const calibrationValue = Number(`${firstNumber}${lastNumber}`);
+  if (isNaN(calibrationValue)) {
+    throw new Error("calibrationValue is NaN");
+  }
+  return calibrationValue;
 };
 
 const spelledOutNumbers: Record<string, number> = {
@@ -48,11 +56,10 @@ const spelledOutNumbers: Record<string, number> = {
   nine: 9,
 };
 
-// Add a lookahead assertion for each spelled out number
-const spelledOutNumbersRegex = new RegExp(
-  Object.keys(spelledOutNumbers)
-    .map((key) => key + "(?![a-z])")
-    .join("|") + "|[1-9]",
-  "g"
-);
+const getNumbersWithFirstLetter = (letter: string) => {
+  return Object.entries(spelledOutNumbers)
+    .filter(([key]) => key[0] === letter)
+    .map((x) => x[0]);
+};
+
 main();
