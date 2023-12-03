@@ -1,6 +1,3 @@
-// on veux trouver les PN dans un schema
-// les PN sont les nombre adjacents a un symbole (horizontalement, verticalement et diagonalement)
-
 import { fileInputToLines } from "../lib/fileInputToLines";
 
 export const main = async (inputPath = "input.txt") => {
@@ -9,17 +6,18 @@ export const main = async (inputPath = "input.txt") => {
   let pnPositions: PNPosition = {};
   let symbolPositions: SymbolPosition = {};
   let partNumbers: number[] = [];
-  for (const line of lines) {
-    console.log(line);
+  for (let line of lines) {
     let charIdx = 0;
     for (const char of line) {
+      //
       if (!isNaN(+char)) {
+        const xEnd = charIdx + line.slice(charIdx).search(/[^0-9]/) - 1;
         const savedLine = pnPositions?.[lineIdx];
         if (!savedLine) {
           pnPositions[lineIdx] = [
             {
               xStart: charIdx,
-              xEnd: charIdx + line.slice(charIdx).search(/[^0-9]/) - 1,
+              xEnd,
             },
           ];
         } else {
@@ -30,7 +28,7 @@ export const main = async (inputPath = "input.txt") => {
           if (!pnAlreadySaved) {
             savedLine.push({
               xStart: charIdx,
-              xEnd: charIdx + line.slice(charIdx).search(/[^0-9]/) - 1,
+              xEnd,
             });
           }
         }
@@ -64,18 +62,18 @@ export const main = async (inputPath = "input.txt") => {
       );
       const isAdjacentToSymbolRight = symbolPositions?.[+lineIdx]?.find(
         (symbol) => {
-          return symbol.x === xEnd + 1;
+          return symbol.x === xEnd + 1 || xEnd === lines[+lineIdx].length - 1;
         }
       );
       const isAdjacentToSymbolTop = symbolPositions?.[+lineIdx - 1]?.find(
         (symbol) => {
-          // sur la ligne du dessus, on cherche si il y a un symbole entre xStart -1 et xEnd + 1 (pour traiter les diagonales)
+          // on the line above, check if there is a symbol at the same x (with diagonal)
           return symbol.x >= xStart - 1 && symbol.x <= xEnd + 1;
         }
       );
       const isAdjacentToSymbolBottom = symbolPositions?.[+lineIdx + 1]?.find(
         (symbol) => {
-          // meme chose que pour le top
+          // same as top
           return symbol.x >= xStart - 1 && symbol.x <= xEnd + 1;
         }
       );
