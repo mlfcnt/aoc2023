@@ -9,9 +9,10 @@ export const main = async (inputPath = "input.txt") => {
   for (let line of lines) {
     let charIdx = 0;
     for (const char of line) {
-      //
       if (!isNaN(+char)) {
-        const xEnd = charIdx + line.slice(charIdx).search(/[^0-9]/) - 1;
+        const lastNum = line.slice(charIdx).search(/[^0-9]/);
+        const xEnd = charIdx + (lastNum === -1 ? line.length : lastNum - 1);
+
         const savedLine = pnPositions?.[lineIdx];
         if (!savedLine) {
           pnPositions[lineIdx] = [
@@ -51,42 +52,51 @@ export const main = async (inputPath = "input.txt") => {
     lineIdx++;
   }
 
+  // console.log(pnPositions[106]);
+
   for (const [lineIdx, positions] of Object.entries(pnPositions)) {
     for (const pnPosition of positions) {
       const { xStart, xEnd } = pnPosition;
+      const pn = Number(lines[+lineIdx].slice(xStart, xEnd + 1));
 
       const isAdjacentToSymbolLeft = symbolPositions?.[+lineIdx]?.find(
         (symbol) => {
           return symbol.x === xStart - 1;
         }
       );
+
+      if (isAdjacentToSymbolLeft) {
+        partNumbers.push(pn);
+        continue;
+      }
       const isAdjacentToSymbolRight = symbolPositions?.[+lineIdx]?.find(
         (symbol) => {
           return symbol.x === xEnd + 1 || xEnd === lines[+lineIdx].length - 1;
         }
       );
+      if (isAdjacentToSymbolRight) {
+        partNumbers.push(pn);
+        continue;
+      }
       const isAdjacentToSymbolTop = symbolPositions?.[+lineIdx - 1]?.find(
         (symbol) => {
           // on the line above, check if there is a symbol at the same x (with diagonal)
           return symbol.x >= xStart - 1 && symbol.x <= xEnd + 1;
         }
       );
+      if (isAdjacentToSymbolTop) {
+        partNumbers.push(pn);
+        continue;
+      }
       const isAdjacentToSymbolBottom = symbolPositions?.[+lineIdx + 1]?.find(
         (symbol) => {
           // same as top
           return symbol.x >= xStart - 1 && symbol.x <= xEnd + 1;
         }
       );
-
-      const pn = Number(lines[+lineIdx].slice(xStart, xEnd + 1));
-
-      if (
-        isAdjacentToSymbolLeft ||
-        isAdjacentToSymbolRight ||
-        isAdjacentToSymbolTop ||
-        isAdjacentToSymbolBottom
-      ) {
+      if (isAdjacentToSymbolBottom) {
         partNumbers.push(pn);
+        continue;
       }
     }
   }
