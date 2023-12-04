@@ -1,53 +1,56 @@
 import { fileInputToLines } from "../lib/fileInputToLines";
 
-export const main = async (inputPath = "part1-input.txt") => {
+export const main = async (inputPath: string) => {
   const lines = await fileInputToLines(inputPath);
-  let cards: Card[] = lines.map((line) => {
+  let cardsDic: CardDic = {};
+  for (let i = 1; i < lines.length + 1; i++) {
+    cardsDic[i] = {
+      id: i,
+      winningNumbers: [],
+      playedNumbers: [],
+      totalAmount: 1,
+    };
+  }
+  lines.map((line) => {
     const id = +line.split(":")[0].trim().replace("Card ", "");
     const winningNumbers = parseCards("winning", line);
     const playedNumbers = parseCards("played", line);
-    const copyCardsWon = playedNumbers.filter((x) =>
-      winningNumbers.includes(x)
-    );
-    return {
-      id,
-      winningNumbers,
-      playedNumbers,
-      copyCardsWon,
-    };
+
+    cardsDic[id].winningNumbers = winningNumbers;
+    cardsDic[id].playedNumbers = playedNumbers;
+    const matches = winningNumbers.filter((x) =>
+      playedNumbers.includes(x)
+    ).length;
+
+    if (matches === 0) return;
+    for (let i = 1; i <= matches; i++) {
+      console.log("adding one copy of card", id + i, "from card", id);
+      if (!cardsDic[id + i]) break;
+      cardsDic[id + i].totalAmount += cardsDic[id].totalAmount;
+    }
   });
 
-  let amountOfCards = cards.length;
-
-  const redraw = () => {
-    const oldCardsLength = cards.length;
-    cards.push(
-      ...cards.flatMap((card) =>
-        card.copyCardsWon.map((copy) => {
-          const originalIdx = cards.findIndex((c) => c.id === copy);
-          return cards[originalIdx + 1];
-        })
-      )
-    );
-    const newCardsLength = cards.length;
-    console.log({ oldCardsLength, newCardsLength, cards });
-    amountOfCards = newCardsLength;
-  };
-  redraw();
-  console.log(`Day 4 / Part 2 Result: ${amountOfCards}`);
-  return amountOfCards;
+  const totalAmountOfCards = Object.values(cardsDic).reduce(
+    (acc, card) => acc + card.totalAmount,
+    0
+  );
+  console.log(`Day 4 / Part 2 Result: ${totalAmountOfCards} different cards`);
+  return totalAmountOfCards;
 };
 
-main();
+main("input.txt");
 
 type CardId = number;
 
-type Card = {
-  id: CardId;
-  winningNumbers: number[];
-  playedNumbers: number[];
-  copyCardsWon: CardId[];
-};
+type CardDic = Record<
+  CardId,
+  {
+    id: CardId;
+    winningNumbers: number[];
+    playedNumbers: number[];
+    totalAmount: number;
+  }
+>;
 
 const parseCards = (kind: "winning" | "played", line: string) => {
   const numbers = line

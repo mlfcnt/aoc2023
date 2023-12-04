@@ -1,6 +1,6 @@
 import { fileInputToLines } from "../lib/fileInputToLines";
 
-export const main = async (inputPath = "part1-input.txt") => {
+export const main = async (inputPath: string) => {
   const lines = await fileInputToLines(inputPath);
   const cards: Card[] = lines.map((line) => {
     const id = +line.split(":")[0].trim().replace("Card ", "");
@@ -29,7 +29,7 @@ export const main = async (inputPath = "part1-input.txt") => {
   return calculatePoints;
 };
 
-main();
+main("input.txt");
 
 type Card = {
   id: number;

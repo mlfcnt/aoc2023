@@ -3,6 +3,6 @@ import { main } from "./part2";
 
 describe("day4 - Part 2", () => {
   it("golden number", async () => {
-    expect(await main("part1-test-input.txt")).toEqual(30);
+    expect(await main("test-input.txt")).toEqual(30);
   });
 });
